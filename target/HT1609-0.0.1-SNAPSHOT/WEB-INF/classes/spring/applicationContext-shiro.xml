@@ -1,0 +1,86 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:context="http://www.springframework.org/schema/context"
+	xmlns:aop="http://www.springframework.org/schema/aop"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans 
+				         http://www.springframework.org/schema/beans/spring-beans-4.0.xsd
+				         http://www.springframework.org/schema/context
+				         http://www.springframework.org/schema/context/spring-context-4.0.xsd
+				         http://www.springframework.org/schema/tx
+				         http://www.springframework.org/schema/tx/spring-tx-4.0.xsd
+				         http://www.springframework.org/schema/aop 
+				         http://www.springframework.org/schema/aop/spring-aop-4.0.xsd">
+
+	<!--将Shiro的组件以bean的形式，交给Spring管理  -->	
+	 <bean id="lifeCycleBeanProcessor" class="org.apache.shiro.spring.LifecycleBeanPostProcessor"></bean>
+	 
+	
+	<!--spring为管理的Shiro组件生成代理对象，方便以后调用  -->
+	 <bean class="org.springframework.aop.framework.autoproxy.DefaultAdvisorAutoProxyCreator"
+	 depends-on="lifeCycleBeanProcessor">
+	 	<!--代理对象的生成方式2种  
+	 		1.jdk的动态代理模式  如果不指定代理模式，，jdk则是默认的
+	 		2.cgLib代理默认  
+	 		默认使用cglib代理模式 生成代理对象，在shiro中需要指定代理对象的生成方式 为cglib
+	 	  -->
+	 	<property name="proxyTargetClass" value="true"></property>
+	 </bean>
+	
+	<!--强制使用cglib生成代理对象 -->
+	<aop:aspectj-autoproxy proxy-target-class="true"></aop:aspectj-autoproxy>
+  	
+  	
+  	<!--securityManager 是Shiro的核心部分，将来做的全部的安全性的处理 都需要该组件  -->
+	 <bean id="securityManager" class="org.apache.shiro.web.mgt.DefaultWebSecurityManager">
+		<!--securityManager 需要手动的指定realm 该realm是就提供安全处理的原材料。
+		其中属性的名称必须为  realm  -->
+	 	<property name="realm" ref="AuthRealm"></property>
+	 </bean>
+	 
+	 <!--自定义的Realm  需要指明包名和类名  -->
+	 <bean id="AuthRealm" class="cn.tarena.ht.shiro.AuthRealm">
+	 	<!--添加自定义的加密算法  -->
+	 	<property name="credentialsMatcher" ref="authCredential"></property>
+	 </bean>
+	 
+	 <!--自定义的加密  -->
+	 <bean id="authCredential" class="cn.tarena.ht.shiro.AuthCredential"></bean>
+	 
+	 
+	
+	<!-- 配置权限管理器 ，如果权限管理器想生效 必须添加shiro安全管理器 -->
+	 <bean  class="org.apache.shiro.spring.security.interceptor.AuthorizationAttributeSourceAdvisor">
+	 	<property name="securityManager" ref="securityManager"></property>
+	 </bean>
+	 
+	<!--shiro生产的过滤器，将来为web提供服务  -->
+	 <bean id="shiroFilter"  class="org.apache.shiro.spring.web.ShiroFilterFactoryBean">
+	 	<property name="securityManager" ref="securityManager"></property>
+	 	
+	 	<!--如果shiro生效，那么默认的访问路径为index.jsp
+	 		在没有经过安全验证时，浏览器的路径都为index.jsp
+	 	  -->
+	 	<property name="loginUrl" value="/index.jsp"></property>
+	 	
+	 	<!--过滤器链  -->
+	 	<property name="filterChainDefinitions">
+	 	<value>
+	 		<!--shiro中关键字   anon 表示放行    authc 表示拦截
+	 			/** 表示所有的请求和静态资源文件
+	 		  -->
+	 		/toLogin.action=anon	
+	 		/login.action=anon
+	 		/staticfile/**=anon
+	 		<!--放行静态资源文件  -->
+	 		
+	 		/**=authc
+	 		
+	 	</value>
+	 	</property>
+	 
+	 </bean>
+	 
+	 
+</beans> 

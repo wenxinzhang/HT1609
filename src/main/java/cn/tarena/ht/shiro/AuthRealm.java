@@ -42,7 +42,7 @@ public class AuthRealm extends AuthorizingRealm{
 		//定义用户的权限列表
 		List<String> moduleList = new ArrayList<String>();
 		moduleList.add("货运管理");
-		moduleList.add("基础信息");
+		//moduleList.add("基础信息");
 		moduleList.add("系统管理");
 		
 		//创建权限控制的info对象
